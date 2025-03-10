@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conference Attendance Scanner</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background-color: #00000071;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+
+        .session-selector {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        #reader {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .result-container {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+            transition: all 0.3s ease;
+        }
+
+        .success {
+            color: #155724;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            color: #721c24;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+        }
+
+        .stats {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        button {
+            background: #000000;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 0 10px;
+        }
+
+        button:hover {
+            background: #000000;
+        }
+
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+
+        #attendanceLog {
+            margin-top: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .log-entry {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Conference Attendance Scanner</h1>
+            <p>IRC 2025 - January 26, 2025</p>
+        </div>
+
+        <div class="session-selector">
+            <label for="sessionSelect">Select Current Session:</label>
+            <select id="sessionSelect"></select>
+        </div>
+
+        <div id="scannerControls">
+            <button id="startButton" disabled>Start Scanner</button>
+            <button id="stopButton" disabled>Stop Scanner</button>
+        </div>
+
+        <div id="reader"></div>
+        
+        <div id="result" class="result-container">
+            <h3 id="attendeeName"></h3>
+            <p id="attendeeEmail"></p>
+            <p id="scanStatus"></p>
+        </div>
+
+        <div class="stats">
+            <h3>Session Statistics</h3>
+            <div id="sessionStats"></div>
+        </div>
+
+        <div id="attendanceLog">
+            <h3>Recent Check-ins</h3>
+            <div id="logEntries"></div>
+        </div>
+    </div>
+
+    <script>
+        let html5QrcodeScanner = null;
+        let currentSession = '';
+
+        function getSessions() {
+            return [
+                {
+                    track_title: "Main Hall",
+                    sessions: [
+                        { session_id: "101", title: "Opening Ceremony", time: "2025-01-26T09:00:00Z" },
+                        { session_id: "102", title: "Sustainable Futures: Bridging Science and Policy for Climate Action", time: "2025-01-26T10:00:00Z" }
+                    ]
+                },
+                {
+                    track_title: "u1 212",
+                    sessions: [
+                        { session_id: "201", title: "Revolutionizing Global Finance: The Role of Technology and Innovation", time: "2025-01-26T11:30:00Z" }
+                    ]
+                },
+                {
+                    track_title: "u1 300",
+                    sessions: [
+                        { session_id: "301", title: "Robotics", time: "2025-01-26T14:00:00Z" }
+                    ]
+                },
+                {
+                    track_title: "u2 200",
+                    sessions: [
+                        { session_id: "401", title: "Transforming Learning: Strategies for Equitable Global Education", time: "2025-01-26T15:30:00Z" }
+                    ]
+                }
+            ];
+        }
+
+        function populateSessionSelect() {
+            const select = document.getElementById('sessionSelect');
+            const sessions = getSessions();
+            
+            select.innerHTML = '<option value="" disabled selected>Select a session</option>';
+            
+            sessions.forEach(track => {
+                const group = document.createElement('optgroup');
+                group.label = track.track_title;
+                
+                track.sessions.forEach(session => {
+                    const option = document.createElement('option');
+                    option.value = session.session_id;
+                    option.textContent = `${session.title} - ${new Date(session.time).toLocaleString()}`;
+                    group.appendChild(option);
+                });
+                
+                select.appendChild(group);
+            });
+        }
+
+        async function handleSessionChange(e) {
+            currentSession = e.target.value;
+            document.getElementById('startButton').disabled = !currentSession;
+            await updateSessionStats();
+        }
+
+        async function startScanner() {
+            if (!currentSession) {
+                alert('Please select a session first.');
+                return;
+            }
+
+            document.getElementById('startButton').disabled = true;
+            document.getElementById('stopButton').disabled = false;
+
+            html5QrcodeScanner = new Html5Qrcode("reader");
+            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+            try {
+                await html5QrcodeScanner.start(
+                    { facingMode: "environment" },
+                    config,
+                    onScanSuccess
+                );
+            } catch (err) {
+                console.error('Scanner start error:', err);
+                alert('Failed to start scanner. Please check camera permissions.');
+                document.getElementById('startButton').disabled = false;
+                document.getElementById('stopButton').disabled = true;
+            }
+        }
+
+        async function stopScanner() {
+            if (html5QrcodeScanner) {
+                try {
+                    await html5QrcodeScanner.stop();
+                    document.getElementById('startButton').disabled = false;
+                    document.getElementById('stopButton').disabled = true;
+                } catch (err) {
+                    console.error('Scanner stop error:', err);
+                }
+            }
+        }
+
+        async function onScanSuccess(participantId) {
+            try {
+                const response = await fetch('http://localhost:3000/api/check-in', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        participantId,
+                        sessionId: currentSession
+                    })
+                });
+
+                const data = await response.json();
+                showResult(data);
+                if (data.success) {
+                    addLogEntry(data.participant);
+                    await updateSessionStats();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showResult({
+                    success: false,
+                    message: 'Error processing scan. Please try again.'
+                });
+            }
+        }
+
+        function showResult(data) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = `result-container ${data.success ? 'success' : 'error'}`;
+            
+            document.getElementById('attendeeName').textContent = data.participant?.name || '';
+            document.getElementById('attendeeEmail').textContent = data.participant?.email || '';
+            document.getElementById('scanStatus').textContent = data.message;
+
+            setTimeout(() => {
+                resultDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        function addLogEntry(participant) {
+            const logDiv = document.getElementById('logEntries');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = `${participant.name} - ${new Date().toLocaleTimeString()}`;
+            logDiv.insertBefore(entry, logDiv.firstChild);
+        }
+
+        async function updateSessionStats() {
+            if (!currentSession) return;
+            
+            try {
+                const response = await fetch(`http://localhost:3000/api/attendance-stats/${currentSession}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('sessionStats').innerHTML = `
+                        <p>Total Check-ins: ${data.stats.total_checkins}</p>
+                        <p>Unique Attendees: ${data.stats.unique_attendees}</p>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            populateSessionSelect();
+            document.getElementById('sessionSelect').addEventListener('change', handleSessionChange);
+            document.getElementById('startButton').addEventListener('click', startScanner);
+            document.getElementById('stopButton').addEventListener('click', stopScanner);
+        });
+    </script>
+</body>
+</html>

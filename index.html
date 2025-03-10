@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conference Day Management System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Navigation */
+        nav {
+            background-color:blue;
+            padding: 1rem;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            color: black;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            transition: opacity 0.3s;
+        }
+
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+
+        .mobile-menu {
+            display: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(rgba(74, 144, 226, 0.9), rgba(74, 144, 226, 0.9)), url('/api/placeholder/1920/1080');
+            background-size: cover;
+			background-image: url("https://itum.mrt.ac.lk/sites/default/files/inline-images/news-7.jpg");
+            color: red;
+            padding: 8rem 2rem 4rem;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+
+
+        /* Schedule Section */
+        .schedule {
+            padding: 5rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            color: blue;
+        }
+
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .schedule-item {
+            background: green;
+            padding: 1.5rem;
+            border-radius: 50px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+
+        .schedule-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .schedule-time {
+            color: #4a90e2;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Speakers Section */
+        .speakers {
+            background: #f5f5f5;
+            padding: 4rem 2rem;
+        }
+
+        .speakers-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .speaker-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .speaker-image {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin: 2rem auto;
+            object-fit: cover;
+        }
+
+        /* Registration Form */
+        .registration {
+            padding: 4rem 2rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .submit-btn {
+            background: #0000002e;
+            color: rgb(0, 0, 0);
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+
+        .submit-btn:hover {
+            background: #00000043;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .nav-links.active {
+                display: flex;
+                flex-direction: column;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: #4a90e2;
+                padding: 1rem;
+            }
+
+            .mobile-menu {
+                display: block;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <div class="logo">IRC 2025</div>
+            <div class="nav-links">
+                <a href="#schedule">Schedule</a>
+                <a href="#speakers">Speakers</a>
+                <a href="#registration">Registration</a>
+            </div>
+            <div class="mobile-menu">☰</div>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <h1>International Research Conference</h1>
+        <p>Institute of Technology University of Moratuwa, Sri Lanka.</p>
+		<br><p>26 January 2025</p>
+       
+    </section>
+
+    <section id="schedule" class="schedule">
+        <h2 class="section-title">Conference Schedule</h2>
+        <div class="schedule-grid" id="scheduleGrid"></div>
+    </section>
+
+    <section id="speakers" class="speakers">
+        <h2 class="section-title">Keynote Speakers</h2>
+        <div class="speakers-grid" id="speakersGrid"></div>
+    </section>
+
+    <section id="registration" class="registration">
+    <h2 class="section-title">Registration</h2>
+    <form id="registrationForm">
+        <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" required name="name" id="name">
+        </div>
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" required name="email" id="email">
+        </div>
+        <div class="form-group">
+            <label>Organization</label>
+            <input type="text" required name="organization" id="organization">
+        </div>
+        <button type="submit" class="submit-btn">Register Now</button>
+    </form>
+    <div id="qrCodeContainer" style="display: none; text-align: center; margin-top: 20px;">
+        <h3>Your Registration QR Code</h3>
+        <img id="qrCode" alt="Registration QR Code">
+        <p>Please save this QR code for check-in</p>
+    </div>
+</section>
+
+<script>
+document.getElementById('registrationForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = {
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        organization: document.getElementById('organization').value
+    };
+
+    try {
+        const response = await fetch('http://localhost:3000/api/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Show success message and QR code
+            const qrCodeContainer = document.getElementById('qrCodeContainer');
+            const qrCodeImage = document.getElementById('qrCode');
+            qrCodeImage.src = data.qrCode;
+            qrCodeContainer.style.display = 'block';
+            
+            // Clear form
+            this.reset();
+            alert('Registration successful!');
+        } else {
+            alert('Registration failed: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred during registration. Please try again.');
+    }
+});
+</script>
+
+    <script>
+        // Sample Data
+        const scheduleData = [
+            {
+                time: '09:00 AM',
+                title: 'Opening Ceremony',
+                speaker: 'Dr. Ada Lin',
+                track: 'Main Hall'
+            },
+            {
+                time: '10:00 AM',
+                title: 'Sustainable Futures: Bridging Science and Policy for Climate Action',
+                speaker: 'Professor Rahul Patel',
+                track: 'Main Hall'
+            },
+            {
+                time: '11:30 AM',
+                title: 'Revolutionizing Global Finance: The Role of Technology and Innovation',
+                speaker: 'Mr. Carlos Mendes ',
+                track: 'u1 212'
+            },
+            {
+                time: '02:00 PM',
+                title: 'Robotics',
+                speaker: 'Dr. Cynthia Breazeal',
+                track: 'u1 300'
+            },
+            {
+                time: '03:30 PM',
+                title: 'Transforming Learning: Strategies for Equitable Global Education',
+                speaker: 'Dr. Emily Richards ',
+                track: 'u2 200'
+            }
+        ];
+
+        const speakersData = [
+            {
+                name: 'Professor Rahul Patel',
+                title: 'Sustainable Futures: Bridging Science and Policy for Climate Action',
+                organization: 'Tech University',
+                image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQOn1hKHTGCy1RqfZKBXZYSrYssa2WFh1_-Eg&s'
+            },
+            {
+                name: 'Mr. Carlos Mendes',
+                title: 'Revolutionizing Global Finance: The Role of Technology and Innovation',
+                organization: 'Tech University',
+                image: 'https://i0.wp.com/crayhill.com/wp-content/uploads/2015/07/Carlos-Mendez-large.png?fit=1500%2C600&ssl=1'
+            },
+            {
+                name: 'DR. CYNTHIA BREAZEAL',
+                title: 'Robotics Scientist',
+                organization: 'Tech University',
+                image: 'https://s.wsj.net/public/resources/images/BN-MH219_wolfe_FR_20160126132027.jpg'
+            },
+			{
+                name: 'Dr. Emily Richards',
+                title: 'Transforming Learning: Strategies for Equitable Global Education',
+                organization: 'Tech University',
+                image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRdN0xgy804R6_V9uTbmOJE72jwEz0zKjmO0g&s'
+            }
+        ];
+
+        // Mobile Menu Toggle
+        document.querySelector('.mobile-menu').addEventListener('click', () => {
+            document.querySelector('.nav-links').classList.toggle('active');
+        });
+
+        // Populate Schedule
+        const scheduleGrid = document.getElementById('scheduleGrid');
+        scheduleData.forEach(item => {
+            const scheduleItem = document.createElement('div');
+            scheduleItem.className = 'schedule-item';
+            scheduleItem.innerHTML = `
+                <div class="schedule-time">${item.time}</div>
+                <h3>${item.title}</h3>
+                <p>${item.speaker}</p>
+                <p>${item.track}</p>
+            `;
+            scheduleGrid.appendChild(scheduleItem);
+        });
+
+        // Populate Speakers
+        const speakersGrid = document.getElementById('speakersGrid');
+        speakersData.forEach(speaker => {
+            const speakerCard = document.createElement('div');
+            speakerCard.className = 'speaker-card';
+            speakerCard.innerHTML = `
+                <img src="${speaker.image}" alt="${speaker.name}" class="speaker-image">
+                <h3>${speaker.name}</h3>
+                <p>${speaker.title}</p>
+                <p>${speaker.organization}</p>
+            `;
+            speakersGrid.appendChild(speakerCard);
+        });
+
+        // Countdown Timer
+        function updateCountdown() {
+            const conferenceDate = new Date('2025-01-26T09:00:00');
+            const now = new Date();
+            const diff = conferenceDate - now;
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+            document.getElementById('countdown').innerHTML = `
+                ${days}d ${hours}h ${minutes}m until the conference
+            `;
+        }
+        updateCountdown();
+        setInterval(updateCountdown, 60000);
+
+        // Form Submission
+        document.getElementById('registrationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Registration submitted successfully!');
+            this.reset();
+        });
+
+        // Smooth Scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+            document.getElementById('registrationForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    // Collect form data
+    const name = this.querySelector('input[type="text"]').value;
+    const email = this.querySelector('input[type="email"]').value;
+    const track = this.querySelector('select').value;
+
+    try {
+        // Send data to backend
+        const response = await fetch('http://localhost:3000/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, track }),
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            alert(result.message);
+        } else {
+            alert('Error: ' + result.message);
+        }
+
+        this.reset();
+    } catch (error) {
+        console.error('Error submitting registration:', error);
+        alert('An error occurred. Please try again.');
+    }
+});
+if (response.ok) {
+    alert(result.message);
+    const qrImg = document.createElement('img');
+    qrImg.src = result.qrCode;
+    qrImg.alt = 'QR Code';
+    document.body.appendChild(qrImg); // Add QR code to the page
+}
+
+
+        });
+    </script>
+</body>
+</html>
